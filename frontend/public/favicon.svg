@@ -1,0 +1,49 @@
+﻿<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bgGrad" x1="0" y1="0" x2="512" y2="512" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#0F172A" />
+      <stop offset="100%" stop-color="#020617" />
+    </linearGradient>
+    <linearGradient id="shieldGrad" x1="120" y1="80" x2="392" y2="440" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#38BDF8" />
+      <stop offset="50%" stop-color="#6366F1" />
+      <stop offset="100%" stop-color="#A855F7" />
+    </linearGradient>
+    <linearGradient id="innerGlow" x1="256" y1="100" x2="256" y2="400" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#38BDF8" stop-opacity="0.25" />
+      <stop offset="100%" stop-color="#6366F1" stop-opacity="0.05" />
+    </linearGradient>
+    <linearGradient id="checkGrad" x1="180" y1="200" x2="330" y2="340" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#38BDF8" />
+      <stop offset="100%" stop-color="#34D399" />
+    </linearGradient>
+    <filter id="shadow" x="60" y="60" width="392" height="400" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#38BDF8" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+
+  <!-- Background Container -->
+  <rect width="512" height="512" rx="112" fill="url(#bgGrad)" />
+  <rect width="504" height="504" x="4" y="4" rx="108" stroke="#1E293B" stroke-width="8" fill="none" />
+
+  <!-- Outer Shield Aura / Shadow -->
+  <g filter="url(#shadow)">
+    <!-- Shield Outline -->
+    <path d="M256 88 L384 136 V248 C384 336 324 404 256 432 C188 404 128 336 128 248 V136 L256 88 Z"
+          fill="url(#innerGlow)"
+          stroke="url(#shieldGrad)"
+          stroke-width="24"
+          stroke-linejoin="round" />
+  </g>
+
+  <!-- AI Sparkle inside top-right of Shield -->
+  <path d="M320 160 C320 175 330 185 345 185 C330 185 320 195 320 210 C320 195 310 185 295 185 C310 185 320 175 320 160 Z"
+        fill="#38BDF8" />
+
+  <!-- Shield Checkmark / Core Symbol -->
+  <path d="M204 252 L242 290 L310 214"
+        stroke="url(#checkGrad)"
+        stroke-width="28"
+        stroke-linecap="round"
+        stroke-linejoin="round" />
+</svg>
