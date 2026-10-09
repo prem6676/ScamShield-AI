@@ -3,34 +3,297 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: ScamShield AI analysis and scan history API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: scans
+    description: Message analysis and scan history
 paths:
-  /healthz:
+  /health:
     get:
       operationId: healthCheck
       tags: [health]
-      summary: Health check
-      description: Returns server health status
+      summary: Get service health
       responses:
         "200":
-          description: Healthy
+          description: Current server and persistence status
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /analyze:
+    post:
+      operationId: analyzeMessage
+      tags: [scans]
+      summary: Analyze a suspicious message and save its result
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AnalysisInput"
+      responses:
+        "201":
+          description: Analysis completed and saved to available storage
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Scan"
+        "400":
+          description: Invalid message or URL
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "503":
+          description: Analysis could not be completed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /scans:
+    get:
+      operationId: getScans
+      tags: [scans]
+      summary: List saved scans
+      parameters:
+        - name: riskLevel
+          in: query
+          required: false
+          schema:
+            $ref: "#/components/schemas/RiskLevel"
+        - name: search
+          in: query
+          required: false
+          schema:
+            type: string
+            maxLength: 200
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 200
+            default: 50
+      responses:
+        "200":
+          description: Recent scans and persistence availability
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScanList"
+  /scans/{id}:
+    get:
+      operationId: getScan
+      tags: [scans]
+      summary: Get a scan by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: The requested scan
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Scan"
+        "404":
+          description: Scan not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      operationId: deleteScan
+      tags: [scans]
+      summary: Delete a scan
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Scan deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScanDeletionResult"
+        "404":
+          description: Scan not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /stats:
+    get:
+      operationId: getStats
+      tags: [scans]
+      summary: Get total and risk-level scan counts
+      responses:
+        "200":
+          description: Scan totals for the dashboard
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScanStats"
 components:
   schemas:
     HealthStatus:
       type: object
+      required: [status, databaseConfigured, persistenceAvailable, aiConfigured]
       properties:
         status:
           type: string
+          enum: [ok]
+        databaseConfigured:
+          type: boolean
+        persistenceAvailable:
+          type: boolean
+        aiConfigured:
+          type: boolean
+    RiskLevel:
+      type: string
+      enum: [Low, Medium, High, Critical]
+    AnalysisSource:
+      type: string
+      enum: [AI, rule-based]
+    AnalysisInput:
+      type: object
+      additionalProperties: false
+      required: [message]
+      properties:
+        message:
+          type: string
+          minLength: 1
+          maxLength: 10000
+        submittedUrl:
+          type: ["string", "null"]
+          maxLength: 2048
+    Scan:
+      type: object
       required:
-        - status
+        - id
+        - message
+        - submittedUrl
+        - riskScore
+        - riskLevel
+        - summary
+        - indicators
+        - recommendations
+        - category
+        - confidence
+        - analysisSource
+        - createdAt
+        - persistenceAvailable
+      properties:
+        id:
+          type: string
+          format: uuid
+        message:
+          type: string
+        submittedUrl:
+          type: ["string", "null"]
+        riskScore:
+          type: integer
+          minimum: 0
+          maximum: 100
+        riskLevel:
+          $ref: "#/components/schemas/RiskLevel"
+        summary:
+          type: string
+        indicators:
+          type: array
+          items:
+            type: string
+        recommendations:
+          type: array
+          items:
+            type: string
+        category:
+          type: string
+          enum:
+            - phishing
+            - impersonation
+            - financial scam
+            - credential theft
+            - suspicious offer
+            - other
+        confidence:
+          type: number
+          minimum: 0
+          maximum: 1
+        analysisSource:
+          $ref: "#/components/schemas/AnalysisSource"
+        createdAt:
+          type: string
+          format: date-time
+        persistenceAvailable:
+          type: boolean
+    ScanList:
+      type: object
+      required: [scans, total, persistenceAvailable]
+      properties:
+        scans:
+          type: array
+          items:
+            $ref: "#/components/schemas/Scan"
+        total:
+          type: integer
+          minimum: 0
+        persistenceAvailable:
+          type: boolean
+    ScanStats:
+      type: object
+      required:
+        - totalScans
+        - lowRiskCount
+        - mediumRiskCount
+        - highRiskCount
+        - criticalRiskCount
+        - persistenceAvailable
+      properties:
+        totalScans:
+          type: integer
+          minimum: 0
+        lowRiskCount:
+          type: integer
+          minimum: 0
+        mediumRiskCount:
+          type: integer
+          minimum: 0
+        highRiskCount:
+          type: integer
+          minimum: 0
+        criticalRiskCount:
+          type: integer
+          minimum: 0
+        persistenceAvailable:
+          type: boolean
+    ScanDeletionResult:
+      type: object
+      required: [deleted, persistenceAvailable]
+      properties:
+        deleted:
+          type: boolean
+          enum: [true]
+        persistenceAvailable:
+          type: boolean
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
 

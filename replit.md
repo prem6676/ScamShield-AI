@@ -1,45 +1,53 @@
-# [Project name]
+# ScamShield AI
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+ScamShield AI checks suspicious messages for common scam and phishing signals, explains the result, and offers safer next steps.
 
 ## Run & Operate
 
-- `pnpm --filter @workspace/api-server run dev` — run the API server (port 5000)
-- `pnpm run typecheck` — full typecheck across all packages
-- `pnpm run build` — typecheck + build all packages
-- `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
-- `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
-- Required env: `DATABASE_URL` — Postgres connection string
+- `artifacts/api-server` — shared API service used by the web preview
+- `artifacts/scamshield-ai` — responsive React application
+- `pnpm run typecheck` — check all workspace packages
+- `PORT=5000 BASE_PATH=/ pnpm --filter @workspace/scamshield-ai run build` — build the web artifact
+- `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and schemas after OpenAPI edits
+- `artifacts/scamshield-ai/portable-project` — self-contained JavaScript client/server project for local Windows use
+- `artifacts/scamshield-ai/public/scamshield-ai-project.zip` — portable source download served from the dashboard
+
+The preview API uses rule-based analysis and temporary in-memory history when optional AI or Supabase settings are absent. The portable project's `README.md` has the Windows setup steps. Supabase service-role credentials belong only in the backend environment.
 
 ## Stack
 
-- pnpm workspaces, Node.js 24, TypeScript 5.9
-- API: Express 5
-- DB: PostgreSQL + Drizzle ORM
-- Validation: Zod (`zod/v4`), `drizzle-zod`
-- API codegen: Orval (from OpenAPI spec)
-- Build: esbuild (CJS bundle)
+- Web: React, Vite, Wouter, TanStack Query, Recharts, and Lucide
+- API: Express 5 with OpenAPI-generated Zod validation and typed React Query hooks
+- Persistence and analysis: optional Supabase PostgreSQL and optional server-only OpenAI-compatible provider; local heuristic fallback
 
 ## Where things live
 
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+- API contract: `lib/api-spec/openapi.yaml`
+- Shared API routes and services: `artifacts/api-server/src/`
+- Replit web UI: `artifacts/scamshield-ai/src/`
+- Portable project: `artifacts/scamshield-ai/portable-project/`
+- Supabase schema: `artifacts/scamshield-ai/portable-project/database/schema.sql`
 
 ## Architecture decisions
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
+- The portable Windows project is independent of the Replit monorepo; its ZIP contains a client, server, schema, environment examples, and setup instructions.
+- Missing Supabase configuration uses explicitly temporary process memory; a configured-but-unavailable database returns an error instead of silently claiming data was persisted.
+- Submitted URLs are analyzed as text only and are never fetched or opened.
 
 ## Product
 
-_Describe the high-level user-facing capabilities of this app once they exist._
+- Dashboard, message scanner, analysis detail, searchable/filterable history with confirmed deletion, and safety guidance.
+- Every result identifies AI or rule-based analysis and warns that a low score is not proof of safety.
 
 ## User preferences
 
-_Populate as you build — explicit user instructions worth remembering across sessions._
+- Keep the downloadable project runnable on Windows without Replit-only services or APIs.
 
 ## Gotchas
 
-_Populate as you build — sharp edges, "always run X before Y" rules._
+- The portable app's AI and Supabase settings are optional; its default history is volatile and its default analysis is heuristic-based.
+- For an OpenAPI contract change, rerun codegen before typechecking the frontend or API.
 
 ## Pointers
 
-- See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details
+- See the `pnpm-workspace` skill for workspace structure and package details.
